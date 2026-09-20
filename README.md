@@ -1,4 +1,4 @@
-# Eaton ePDU G3 for Home Assistant SNMP
+# Eaton ePDU G3 SNMP for Home Assistant
 
 [![HACS: custom repository](https://img.shields.io/badge/HACS-custom-41BDF5.svg)](https://hacs.xyz)
 [![Validate](https://github.com/LavenderFox2430/ha-eaton-epdu/actions/workflows/validate.yml/badge.svg)](https://github.com/LavenderFox2430/ha-eaton-epdu/actions/workflows/validate.yml)
