@@ -1,12 +1,12 @@
 {
   "domain": "eaton_epdu",
   "name": "Eaton ePDU G3",
-  "codeowners": ["@nickgardner05"],
+  "codeowners": ["@LavenderFox2430"],
   "config_flow": true,
-  "documentation": "https://github.com/nickgardner05/ha-eaton-epdu",
+  "documentation": "https://github.com/LavenderFox2430/ha-eaton-epdu",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/nickgardner05/ha-eaton-epdu/issues",
+  "issue_tracker": "https://github.com/LavenderFox2430/ha-eaton-epdu/issues",
   "loggers": ["pysnmp"],
   "requirements": ["pysnmp>=7.1.0"],
   "version": "1.0.0"

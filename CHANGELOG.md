@@ -36,4 +36,4 @@ First release.
 - Option to expose unmapped MIB columns as diagnostic sensors.
 - `tools/epdu_dump.py`, a standalone SNMP dump and verification tool.
 
-[1.0.0]: https://github.com/nickgardner05/ha-eaton-epdu/releases/tag/v1.0.0
+[1.0.0]: https://github.com/LavenderFox2430/ha-eaton-epdu/releases/tag/v1.0.0

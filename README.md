@@ -1,7 +1,7 @@
 # Eaton ePDU G3 for Home Assistant
 
 [![HACS: custom repository](https://img.shields.io/badge/HACS-custom-41BDF5.svg)](https://hacs.xyz)
-[![Validate](https://github.com/nickgardner05/ha-eaton-epdu/actions/workflows/validate.yml/badge.svg)](https://github.com/nickgardner05/ha-eaton-epdu/actions/workflows/validate.yml)
+[![Validate](https://github.com/LavenderFox2430/ha-eaton-epdu/actions/workflows/validate.yml/badge.svg)](https://github.com/LavenderFox2430/ha-eaton-epdu/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A custom integration for Eaton **ePDU G3** rack PDUs (EMAT/EMAB/EMAH/EMIT/…,
@@ -108,10 +108,10 @@ Any text sensor that cannot be read shows `N/A`. Numeric sensors go to
 
 ### HACS (recommended)
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nickgardner05&repository=ha-eaton-epdu&category=integration)
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=LavenderFox2430&repository=ha-eaton-epdu&category=integration)
 
 Or by hand: **HACS → ⋮ → Custom repositories**, add
-`https://github.com/nickgardner05/ha-eaton-epdu` with category **Integration**,
+`https://github.com/LavenderFox2430/ha-eaton-epdu` with category **Integration**,
 then install it and restart Home Assistant.
 
 ### Manually
