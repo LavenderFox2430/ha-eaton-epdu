@@ -1,0 +1,55 @@
+outlet_on:
+  target:
+    entity:
+      integration: eaton_epdu
+      domain: switch
+  fields:
+    delay:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 7200
+          unit_of_measurement: seconds
+          mode: box
+
+outlet_off:
+  target:
+    entity:
+      integration: eaton_epdu
+      domain: switch
+  fields:
+    delay:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 7200
+          unit_of_measurement: seconds
+          mode: box
+
+outlet_cycle:
+  target:
+    entity:
+      integration: eaton_epdu
+      domain: switch
+  fields:
+    delay:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 7200
+          unit_of_measurement: seconds
+          mode: box
+
+dump_oids:
+  fields:
+    config_entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: eaton_epdu
