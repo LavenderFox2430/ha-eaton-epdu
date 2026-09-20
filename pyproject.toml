@@ -1,0 +1,46 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+# A pragmatic subset of the Home Assistant core rule set. ARG is deliberately
+# left out: platform entry points and entity methods have signatures Home
+# Assistant dictates, unused arguments and all.
+select = [
+    "ASYNC", # async pitfalls
+    "B",     # bugbear
+    "BLE",   # no silent blanket excepts
+    "C4",    # comprehensions
+    "D",     # docstrings
+    "DTZ",   # timezone-aware datetimes
+    "E",     # pycodestyle
+    "F",     # pyflakes
+    "G",     # logging format
+    "I",     # import order
+    "ISC",   # implicit string concat
+    "LOG",   # logging
+    "N",     # naming
+    "PIE",
+    "PTH",   # pathlib
+    "RET",
+    "RUF",
+    "SIM",
+    "T20",   # no stray print()
+    "TRY",
+    "UP",    # pyupgrade
+    "W",
+]
+ignore = [
+    "D203",    # incompatible with D211
+    "D213",    # incompatible with D212
+    "TRY003",  # long messages outside the exception class are fine here
+    "TRY400",  # logger.error in an except block is intentional
+    "ISC001",  # conflicts with the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The dump tool is a standalone CLI: printing is the whole point.
+"tools/*" = ["T20"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"

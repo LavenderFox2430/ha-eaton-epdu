@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eaton ePDU G3",
+        "description": "Address of the ePDU's network card. Daisy-chained units are found automatically.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "snmp_version": "SNMP version"
+        },
+        "data_description": {
+          "snmp_version": "G3 firmware offers SNMPv1 and SNMPv3. Use v3 unless you have deliberately enabled v1/v2c."
+        }
+      },
+      "reconfigure": {
+        "title": "Eaton ePDU G3",
+        "description": "Change how Home Assistant reaches this PDU.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "snmp_version": "SNMP version"
+        }
+      },
+      "community": {
+        "title": "SNMP community",
+        "data": {
+          "community": "Read community",
+          "write_community": "Write community"
+        },
+        "data_description": {
+          "write_community": "Only needed for outlet switching. Leave empty to use the read community."
+        }
+      },
+      "v3": {
+        "title": "SNMPv3 credentials",
+        "description": "Must match a user configured on the PDU under Settings → Network → SNMP.",
+        "data": {
+          "username": "User name",
+          "auth_protocol": "Authentication protocol",
+          "auth_key": "Authentication password",
+          "priv_protocol": "Privacy protocol",
+          "priv_key": "Privacy password"
+        },
+        "data_description": {
+          "auth_protocol": "Choose 'none' for noAuthNoPriv, otherwise the protocol set on the PDU (G3 uses SHA for authNoPriv).",
+          "priv_protocol": "Choose 'none' for authNoPriv."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No SNMP response. Check the address, the port, and that SNMP is enabled on the PDU.",
+      "invalid_auth": "The PDU rejected these credentials. Check the user name, protocol and password, and that the user has read access.",
+      "no_epdu_data": "The device answered but returned no Eaton ePDU data. Check that the SNMP user is allowed to read the Eaton MIB.",
+      "unknown": "Unexpected error. See the Home Assistant log for details."
+    },
+    "abort": {
+      "already_configured": "This PDU is already configured.",
+      "reconfigure_successful": "Settings updated.",
+      "wrong_device": "That is a different PDU than the one being reconfigured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Eaton ePDU options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)",
+          "timeout": "SNMP timeout (seconds)",
+          "retries": "SNMP retries",
+          "max_repetitions": "GETBULK max repetitions",
+          "command_delay": "Delay before re-reading after a switch command (seconds)",
+          "temperature_unit": "Temperature unit reported by the PDU",
+          "expose_unmapped": "Create sensors for unmapped MIB columns"
+        },
+        "data_description": {
+          "max_repetitions": "Ignored on SNMPv1, which has no GETBULK.",
+          "temperature_unit": "'auto' detects the scale from the PDU. Set it explicitly if temperatures look wrong.",
+          "expose_unmapped": "Adds a diagnostic sensor for every column this integration does not name. Useful for exploring the MIB."
+        }
+      }
+    }
+  },
+  "services": {
+    "outlet_on": {
+      "name": "Turn outlet on",
+      "description": "Switch an outlet on, optionally after a delay.",
+      "fields": {
+        "delay": {
+          "name": "Delay",
+          "description": "Seconds the PDU waits before acting. 0 acts immediately."
+        }
+      }
+    },
+    "outlet_off": {
+      "name": "Turn outlet off",
+      "description": "Switch an outlet off, optionally after a delay.",
+      "fields": {
+        "delay": {
+          "name": "Delay",
+          "description": "Seconds the PDU waits before acting. 0 acts immediately."
+        }
+      }
+    },
+    "outlet_cycle": {
+      "name": "Power cycle outlet",
+      "description": "Switch an outlet off and back on, using the PDU's configured reboot-off time.",
+      "fields": {
+        "delay": {
+          "name": "Delay",
+          "description": "Seconds the PDU waits before acting. 0 acts immediately."
+        }
+      }
+    },
+    "dump_oids": {
+      "name": "Dump SNMP OIDs",
+      "description": "Walk the PDU and write every OID it returns to a JSON file in the Home Assistant configuration folder.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "Limit the dump to one PDU. Leave empty to dump all of them."
+        }
+      }
+    }
+  }
+}
