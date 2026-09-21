@@ -258,6 +258,9 @@ class Table:
     columns: tuple[Column, ...]
     #: column key holding the label the PDU itself shows for the row
     label_column: str | None = None
+    #: column key holding the physical position (an outlet's "A1"). When set,
+    #: the position leads the label and a user-set name follows in brackets.
+    position_column: str | None = None
     #: table whose row label this table inherits (its index is a prefix of ours)
     parent: str | None = None
     #: False when the row label duplicates the Home Assistant device name
@@ -912,6 +915,7 @@ OUTLET_TABLE = Table(
         _diag("phase_id", "Phase", 7, "outletPhaseID", enum=OUTLET_PHASE_ID),
     ),
     label_column="name",
+    position_column="designator",
 )
 
 OUTLET_VOLTAGE_TABLE = Table(

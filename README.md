@@ -1,4 +1,4 @@
-# Eaton ePDU G3 SNMP for Home Assistant
+# Eaton ePDU G3 for Home Assistant
 
 [![HACS: custom repository](https://img.shields.io/badge/HACS-custom-41BDF5.svg)](https://hacs.xyz)
 [![Validate](https://github.com/LavenderFox2430/ha-eaton-epdu/actions/workflows/validate.yml/badge.svg)](https://github.com/LavenderFox2430/ha-eaton-epdu/actions/workflows/validate.yml)
@@ -47,6 +47,26 @@ daisy-chained PDU has dropped off.
 On the reference hardware that is **192 entities enabled by default**, out of
 586 available once the disabled diagnostics are switched on — which is every
 single OID those units expose, with nothing left unmapped.
+
+### Outlet names follow the PDU
+
+The PDU has no field for "what is plugged in here", but it does let you name
+each outlet. Name one on the PDU (**Settings → Outlets**) after its load and
+the integration picks it up on the next poll, with the position kept in front
+so the physical socket stays identifiable:
+
+| Name set on the PDU | Entities become |
+|---|---|
+| `Outlet A1` (factory) | `Outlet A1`, `Outlet A1 Power`, … |
+| `Firewall` | `Outlet A1 (Firewall)`, `Outlet A1 (Firewall) Power`, … |
+
+That covers the switch, the power-cycle and energy-reset buttons, and every
+statistic for that outlet — they all inherit the outlet's label. An outlet
+still carrying its factory name gets no empty brackets, and a name that just
+repeats the position (`A1`) is ignored rather than doubled up.
+
+Renaming an outlet later updates the friendly names; entity IDs keep whatever
+they were created with, as Home Assistant always does.
 
 ### Energy counters are trip meters
 
@@ -246,6 +266,17 @@ MIT.
 ## Trademarks
 
 Eaton and ePDU are trademarks of Eaton Corporation. This is an unofficial,
-community-built integration with no affiliation to or endorsement by Eaton.
-The icons in `custom_components/eaton_epdu/brand/` are original artwork, not
-the Eaton logo.
+community-built integration, not affiliated with or endorsed by Eaton. The
+brand images in `custom_components/eaton_epdu/brand/` are used only to identify
+the hardware this integration talks to, and come from two places:
+
+- `icon.png` / `icon@2x.png` — the favicon an ePDU G3 serves from its own web
+  interface, upscaled from the 64×64 original.
+- `logo.png` / `logo@2x.png` — the Eaton wordmark from Wikimedia Commons
+  ([File:2017 Eaton logo.png](https://commons.wikimedia.org/wiki/File:2017_Eaton_logo.png)),
+  which hosts it as public domain: a plain text wordmark falls below the
+  threshold of originality for copyright. Copyright and trademark are separate,
+  though — the mark remains Eaton's.
+
+Neither is recoloured or redrawn, only trimmed and scaled. Regenerate both with
+`python tools/make_brand_images.py`.

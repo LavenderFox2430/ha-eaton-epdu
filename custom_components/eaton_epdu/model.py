@@ -134,13 +134,52 @@ def _distinct_per_position(indexes: list[tuple[int, ...]], start: int, stop: int
     return [len(values) for values in counts]
 
 
-def _device_label(table: Table, row: dict[str, Any]) -> str | None:
-    if table.label_column is None:
+def _text(row: dict[str, Any], key: str | None) -> str | None:
+    """Return a non-empty stripped string column, or None."""
+    if key is None:
         return None
-    value = row.get(table.label_column)
+    value = row.get(key)
     if isinstance(value, str) and value.strip():
         return value.strip()
     return None
+
+
+def _looks_generic(name: str, position: str, singular: str, number: int) -> bool:
+    """Report whether a name carries nothing the position does not already say.
+
+    A factory-default outlet is called "Outlet A1", which would otherwise be
+    rendered as "Outlet A1 (Outlet A1)".
+    """
+
+    def norm(value: str) -> str:
+        return "".join(value.lower().split())
+
+    return norm(name) in {
+        norm(position),
+        norm(f"{singular} {position}"),
+        norm(f"{singular} {number}"),
+        norm(str(number)),
+    }
+
+
+def _device_label(table: Table, row: dict[str, Any], index: tuple[int, ...]) -> str | None:
+    """Label a row the way the PDU describes it.
+
+    For a table with a position column the physical position leads, and any
+    name set on the PDU -- in practice, whatever is plugged in -- follows in
+    brackets: "Outlet A1 (Firewall)". A name that just repeats the position is
+    dropped. Everywhere else the configured name is used on its own.
+    """
+    name = _text(row, table.label_column)
+    if table.position_column is None:
+        return name
+
+    number = index[-1]
+    position = _text(row, table.position_column) or str(number)
+    base = f"{table.singular} {position}".strip()
+    if name is None or _looks_generic(name, position, table.singular, number):
+        return base
+    return f"{base} ({name})"
 
 
 def build_labels(
@@ -151,7 +190,8 @@ def build_labels(
     Index positions the device only has one of (a single input, a single
     phase) are dropped, so a one-input unit gets "Input voltage" rather than
     "Input 1 Phase 1 voltage". Child tables inherit their parent's label, so
-    outlet measurements are named after the outlet as named on the PDU.
+    an outlet's measurements, switch and buttons are all named after the
+    outlet -- including whatever is plugged into it. See `_device_label`.
     """
     labels: dict[str, dict[tuple[int, ...], str]] = {}
 
@@ -179,7 +219,7 @@ def build_labels(
                 base = labels.get(parent.key, {}).get(index[: len(parent.index)], "")
             else:
                 # A name configured on the PDU replaces the generic index.
-                base = _device_label(table, table_rows[index]) or ""
+                base = _device_label(table, table_rows[index], index) or ""
                 if base:
                     suffix = []
 

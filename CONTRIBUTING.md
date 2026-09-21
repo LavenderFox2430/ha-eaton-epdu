@@ -36,7 +36,16 @@ CI also runs Home Assistant's `hassfest` and the HACS validation action.
 
 ## Brand images
 
-`custom_components/eaton_epdu/brand/` holds the icons, regenerated with
-`python tools/make_brand_icons.py` (needs Pillow). The artwork is original and
-deliberately not the Eaton logo, which is a trademark this repository has no
-licence to redistribute.
+`custom_components/eaton_epdu/brand/` holds `icon.png`, `icon@2x.png`,
+`logo.png` and `logo@2x.png`, all generated from the two vendored sources in
+`tools/`:
+
+```bash
+pip install pillow
+python tools/make_brand_images.py                       # icon: the ePDU favicon
+python tools/make_brand_images.py --icon-style wordmark # icon: the EATON wordmark
+python tools/make_brand_images.py --icon-style letter   # icon: just the E
+```
+
+The landscape logo is always the wordmark. See the trademark note in
+[README.md](README.md#trademarks) for where each source comes from.
