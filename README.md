@@ -76,10 +76,21 @@ restarts its timestamp, on the PDU itself. It is the same reset the PDU's own
 web UI performs — not a Home Assistant-side offset — so the new zero applies
 to anything else polling that PDU.
 
-- `Outlet A1 Reset energy` … one per outlet
-- `Feed A Reset energy` (per phase) and `Feed A Reset total energy` (per input)
+- `Outlet A1 Reset energy total` … one per outlet
+- `Feed A Reset energy total`, for both the per-phase and the per-input counter
 - `Reset all energy counters` — one per PDU, clears every counter on that unit
   (10 of them on an EMAT08-10)
+
+Only the cumulative counters carry the `Total` suffix — `Outlet A1 Energy
+Total`, `Feed A Energy Total`. Instantaneous readings keep plain names
+(`Power`, `Apparent power`, `Power factor`, `Reactive power`).
+
+On a **single-phase** input the per-input totals (`inputTotalVA`,
+`inputTotalWatts`, `inputTotalWh`, …) restate the one per-phase row exactly,
+so they are read but produce no entities — otherwise every feed reading would
+appear twice. On a multi-phase input they are a real sum across phases and are
+kept, alongside the per-phase rows which pick up a `Phase 1/2/3` label. The
+suppressed rows still appear in the diagnostics download.
 
 The buttons sit in the device page's **Configuration** section. There is no
 undo: the previous total is gone from the hardware. Home Assistant's own
@@ -222,7 +233,9 @@ data:
 
 The delay is handled by the PDU itself, not by Home Assistant: the command
 column is written with the delay in seconds, so it still fires even if Home
-Assistant restarts in between.
+Assistant restarts in between. Note the MIB's own caveat — some ePDUs, mainly
+those with part numbers starting `IPV` or `IPC`, reject a delay above 0. On
+those, use the switch and buttons, which always write 0.
 
 ## How it works
 

@@ -65,6 +65,13 @@ PRIV_PROTOCOL_MAP = {
 #: Hard stop so a broken agent cannot walk forever.
 MAX_WALK_ROWS = 20000
 
+#: ASN.1 integer types an SNMP SET can carry. Agents are strict: a column
+#: declared Unsigned32 refuses an Integer32 with "wrongType", and vice versa.
+WRITE_TYPES = {
+    "Integer32": rfc1902.Integer32,
+    "Unsigned32": rfc1902.Unsigned32,
+}
+
 
 class SnmpError(Exception):
     """Raised when an SNMP operation fails."""
@@ -225,19 +232,42 @@ class SnmpClient:
                     result[oid] = snmp_to_python(value)
         return result
 
-    async def set_integer(self, oid: str, value: int) -> None:
-        """SET an Integer32 OID (outlet/group control)."""
-        target = await self._target()
-        error_indication, error_status, error_index, _ = await set_cmd(
-            self._engine,
-            self._auth_data(write=True),
-            target,
-            ContextData(),
-            ObjectType(ObjectIdentity(oid), rfc1902.Integer32(value)),
-            lookupMib=False,
-        )
-        self._check(error_indication, error_status, error_index)
-        _LOGGER.debug("SET %s = %s on %s", oid, value, self.host)
+    async def set_value(self, oid: str, value: int, syntax: str = "Integer32") -> None:
+        """SET an integer OID, using the ASN.1 type the MIB declares.
+
+        If the agent answers "wrongType" the other integer type is tried once.
+        The MIB and the firmware occasionally disagree, and a silent retry is
+        cheaper than a support round trip.
+        """
+        order = [syntax] + [name for name in WRITE_TYPES if name != syntax]
+        last_error: str | None = None
+
+        for attempt, name in enumerate(order):
+            if name == "Unsigned32" and value < 0:
+                continue  # negative values cannot be encoded unsigned
+            target = await self._target()
+            error_indication, error_status, error_index, _ = await set_cmd(
+                self._engine,
+                self._auth_data(write=True),
+                target,
+                ContextData(),
+                ObjectType(ObjectIdentity(oid), WRITE_TYPES[name](value)),
+                lookupMib=False,
+            )
+            if error_indication:
+                raise SnmpError(str(error_indication))
+            if not error_status:
+                if attempt:
+                    _LOGGER.debug("SET %s accepted as %s after %s was refused", oid, name, order[0])
+                else:
+                    _LOGGER.debug("SET %s = %s (%s) on %s", oid, value, name, self.host)
+                return
+
+            last_error = f"{error_status.prettyPrint()} at index {error_index or '?'}"
+            if "wrongtype" not in error_status.prettyPrint().lower():
+                break
+
+        raise SnmpError(last_error or "SET failed")
 
     def close(self) -> None:
         """Release the SNMP engine's transport dispatcher."""

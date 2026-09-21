@@ -232,6 +232,10 @@ class Column:
     temperature: bool = False
     #: writable Wh counter: writing 0 resets it and its timer
     resettable: bool = False
+    #: ASN.1 type an SNMP SET must use for this column. Eaton's command
+    #: columns are Integer32 but the Wh counters are Unsigned32, and agents
+    #: reject the wrong one with "wrongType".
+    write_syntax: str = "Integer32"
     #: used for device info / row labels only, never becomes an entity
     info_only: bool = False
 
@@ -359,7 +363,7 @@ def _var(
     )
 
 
-def _wh(column: int, mib: str, name: str = "Energy", key: str = "energy") -> Column:
+def _wh(column: int, mib: str, name: str = "Energy Total", key: str = "energy") -> Column:
     """Build a Wh counter column.
 
     These are read-write: writing 0 resets the counter and its timer.
@@ -374,6 +378,9 @@ def _wh(column: int, mib: str, name: str = "Energy", key: str = "energy") -> Col
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         resettable=True,
+        # Eaton declares the Wh counters Unsigned32; sending Integer32 gets a
+        # "wrongType" refusal from the agent.
+        write_syntax="Unsigned32",
     )
 
 
@@ -741,25 +748,25 @@ INPUT_TOTAL_TABLE = Table(
     index=(UNIT, IndexPart("Input")),
     parent="input",
     columns=(
-        _va(3, "inputTotalVA", name="Total apparent power", key="total_apparent_power"),
-        _watts(4, "inputTotalWatts", name="Total power", key="total_power"),
-        _wh(5, "inputTotalWh", name="Total energy", key="total_energy"),
+        _va(3, "inputTotalVA", key="total_apparent_power"),
+        _watts(4, "inputTotalWatts", key="total_power"),
+        _wh(5, "inputTotalWh", name="Energy Total", key="total_energy"),
         _wh_timer(
             6,
             "inputTotalWhTimer",
-            name="Total energy counter start",
+            name="Energy Total counter start",
             key="total_energy_reset_time",
         ),
         _power_factor(
             7,
             "inputTotalPowerFactor",
-            name="Total power factor",
+            name="Power factor",
             key="total_power_factor",
         ),
         _var(
             8,
             "inputTotalVAR",
-            name="Total reactive power",
+            name="Reactive power",
             key="total_reactive_power",
         ),
         _diag(
@@ -1088,8 +1095,8 @@ TEMPERATURE_TABLE = Table(
             state_class=SensorStateClass.MEASUREMENT,
             na_below=-2000,
         ),
-        _th_status(5, "temperatureThStatus"),
-        *_limits("", "", 6, "temperature", None, 0.1, temperature=True),
+        _th_status(5, "temperatureThStatus", name="Temperature threshold status"),
+        *_limits("", "Temperature ", 6, "temperature", None, 0.1, temperature=True),
     ),
     label_column="name",
 )
@@ -1121,8 +1128,8 @@ HUMIDITY_TABLE = Table(
             state_class=SensorStateClass.MEASUREMENT,
             na_values=NA_MINUS_ONE,
         ),
-        _th_status(5, "humidityThStatus"),
-        *_limits("", "", 6, "humidity", PERCENTAGE, 0.1),
+        _th_status(5, "humidityThStatus", name="Humidity threshold status"),
+        *_limits("", "Humidity ", 6, "humidity", PERCENTAGE, 0.1),
     ),
     label_column="name",
 )

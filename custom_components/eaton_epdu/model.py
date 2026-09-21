@@ -63,6 +63,13 @@ class EpduData:
     temperature_unit: str = UnitOfTemperature.CELSIUS
     #: unit index -> temperature scale; each unit has its own setting
     temperature_units: dict[int, str] = field(default_factory=dict)
+    #: (table key, index) pairs that only restate another row, so they are
+    #: read and kept in diagnostics but produce no entities
+    redundant: set[tuple[str, tuple[int, ...]]] = field(default_factory=set)
+
+    def is_redundant(self, table_key: str, index: tuple[int, ...]) -> bool:
+        """Report whether a row duplicates one the integration already exposes."""
+        return (table_key, index) in self.redundant
 
     def temperature_unit_for(self, unit_index: int) -> str:
         """Temperature scale of one unit."""
@@ -433,6 +440,7 @@ def build_data(
         temperature_units.get(host, temperature_unit) if host is not None else temperature_unit
     )
     environment = build_environment(rows, units, labels, temperature_units)
+    redundant = build_redundant(rows)
 
     units_present = raw.get(OID_UNITS_PRESENT)
     return EpduData(
@@ -446,7 +454,30 @@ def build_data(
         raw=raw,
         temperature_unit=unit_of_temperature,
         temperature_units=temperature_units,
+        redundant=redundant,
     )
+
+
+def build_redundant(
+    rows: dict[str, dict[tuple[int, ...], dict[str, Any]]],
+) -> set[tuple[str, tuple[int, ...]]]:
+    """Find per-input totals that merely restate a single phase.
+
+    On a single-phase input, inputTotalVA/Watts/PowerFactor/VAR carry exactly
+    what the one inputPower row already carries, so exposing both produces
+    pairs of identically named entities. On a multi-phase input the totals are
+    a real sum and are kept.
+    """
+    phases: dict[tuple[int, ...], set[int]] = {}
+    for index in rows.get("input_power", {}):
+        if len(index) == 3:
+            phases.setdefault(index[:2], set()).add(index[2])
+
+    return {
+        ("input_total", index)
+        for index in rows.get("input_total", {})
+        if len(phases.get(index, ())) == 1
+    }
 
 
 def row_is_readable(row: dict[str, Any]) -> bool:
@@ -549,6 +580,7 @@ __all__ = [
     "EpduData",
     "UnitInfo",
     "build_data",
+    "build_redundant",
     "convert",
     "detect_temperature_unit",
     "parse_walk",

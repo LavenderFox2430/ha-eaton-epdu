@@ -37,16 +37,21 @@ observed `"0,1"`.
 These are the only objects the integration ever writes, and the only ones it
 can write:
 
-| OID | MIB object | Used by | Value written |
-|---|---|---|---|
-| `.6.6.1.3.<u>.<o>` | outletControlOffCmd | outlet switch off | delay in seconds, 0 = now |
-| `.6.6.1.4.<u>.<o>` | outletControlOnCmd | outlet switch on | delay in seconds, 0 = now |
-| `.6.6.1.5.<u>.<o>` | outletControlRebootCmd | power-cycle button | delay in seconds, 0 = now |
-| `.5.6.1.3/.4/.5.<u>.<g>` | groupControl\*Cmd | group switch/button | as above |
-| `.3.4.1.5.<u>.<i>.<p>` | **inputWh** | "Reset energy" | `0` |
-| `.3.5.1.5.<u>.<i>` | **inputTotalWh** | "Reset total energy" | `0` |
-| `.5.5.1.4.<u>.<g>` | **groupWh** | "Reset energy" | `0` |
-| `.6.5.1.4.<u>.<o>` | **outletWh** | "Reset energy" | `0` |
+| OID | MIB object | ASN.1 type | Used by | Value written |
+|---|---|---|---|---|
+| `.6.6.1.3.<u>.<o>` | outletControlOffCmd | Integer32 | outlet switch off | delay in seconds, 0 = now |
+| `.6.6.1.4.<u>.<o>` | outletControlOnCmd | Integer32 | outlet switch on | delay in seconds, 0 = now |
+| `.6.6.1.5.<u>.<o>` | outletControlRebootCmd | Integer32 | power-cycle button | delay in seconds, 0 = now |
+| `.5.6.1.3/.4/.5.<u>.<g>` | groupControl\*Cmd | Integer32 | group switch/button | as above |
+| `.3.4.1.5.<u>.<i>.<p>` | **inputWh** | **Unsigned32** | "Reset energy" | `0` |
+| `.3.5.1.5.<u>.<i>` | **inputTotalWh** | **Unsigned32** | "Reset total energy" | `0` |
+| `.5.5.1.4.<u>.<g>` | **groupWh** | **Unsigned32** | "Reset energy" | `0` |
+| `.6.5.1.4.<u>.<o>` | **outletWh** | **Unsigned32** | "Reset energy" | `0` |
+
+**The type matters.** Agents enforce it: sending an `Integer32` to a column
+declared `Unsigned32` is refused with `wrongType`, and vice versa. Each column
+records its type in `write_syntax`, and the client retries once with the other
+integer type if the agent disagrees with the MIB.
 
 The Wh objects are `read-write` precisely so they can be zeroed; the MIB says
 so outright: *"This object is writable so that it can be reset to 0. When it

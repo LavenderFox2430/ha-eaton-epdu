@@ -54,6 +54,24 @@ _LOGGER = logging.getLogger(__name__)
 type EatonEpduConfigEntry = ConfigEntry[EatonEpduCoordinator]
 
 
+def _write_hint(err: Exception) -> str:
+    """Explain an SNMP SET failure without guessing at the cause."""
+    message = str(err)
+    lowered = message.lower()
+    if "wrongtype" in lowered or "badvalue" in lowered:
+        return (
+            f"{message}. The agent rejected the value's type, which is a bug in "
+            "this integration rather than a permission problem -- please report "
+            "it with the OID above."
+        )
+    if any(hint in lowered for hint in ("noaccess", "notwritable", "authorizationerror")):
+        return (
+            f"{message}. The SNMP user is read-only: for SNMPv3 give it "
+            "read/write rights on the PDU, for v1/v2c set a write community."
+        )
+    return message
+
+
 def client_from_entry(entry_data: dict[str, Any], options: dict[str, Any]) -> SnmpClient:
     """Build an SNMP client from stored config entry data."""
     return SnmpClient(
@@ -172,15 +190,15 @@ class EatonEpduCoordinator(DataUpdateCoordinator[EpduData]):
         table = TABLES_BY_KEY[table_key]
         column_key = {"on": "on_cmd", "off": "off_cmd", "cycle": "reboot_cmd"}[command]
         oid = self.command_oid(table, index, column_key)
+        column = table.column_by_key(column_key)
+        syntax = column.write_syntax if column else "Integer32"
 
         async with self._command_lock:
             try:
-                await self.client.set_integer(oid, delay)
+                await self.client.set_value(oid, delay, syntax)
             except SnmpError as err:
                 raise HomeAssistantError(
-                    f"Failed to send '{command}' to {self.host} ({oid}): {err}. "
-                    "SNMP write access is required: for SNMPv3 the user needs "
-                    "read/write rights on the PDU, for v1/v2c a write community."
+                    f"Failed to send '{command}' to {self.host} ({oid}): {_write_hint(err)}"
                 ) from err
 
             settle = self.entry.options.get(CONF_COMMAND_DELAY, DEFAULT_COMMAND_DELAY)
@@ -197,13 +215,16 @@ class EatonEpduCoordinator(DataUpdateCoordinator[EpduData]):
         async with self._command_lock:
             for table_key, index, column_key in resets:
                 table = TABLES_BY_KEY[table_key]
+                column = table.column_by_key(column_key)
                 oid = self.command_oid(table, index, column_key)
                 try:
-                    await self.client.set_integer(oid, 0)
+                    await self.client.set_value(
+                        oid, 0, column.write_syntax if column else "Unsigned32"
+                    )
                 except SnmpError as err:
                     raise HomeAssistantError(
                         f"Failed to reset the energy counter on {self.host} "
-                        f"({oid}): {err}. SNMP write access is required."
+                        f"({oid}): {_write_hint(err)}"
                     ) from err
                 _LOGGER.info("Reset %s %s on %s", table_key, index, self.host)
         await self.async_request_refresh()

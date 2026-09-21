@@ -44,7 +44,7 @@ async def async_setup_entry(
         # One reset per Wh counter the PDU actually reports...
         for table, column in RESETTABLE:
             for index, row in data.rows.get(table.key, {}).items():
-                if column.key in row:
+                if column.key in row and not data.is_redundant(table.key, index):
                     entities.append(EpduEnergyResetButton(coordinator, table, index, column))
 
         # ...plus one per unit that clears every counter on that PDU.
@@ -67,7 +67,10 @@ def _resets_for_unit(
         (table.key, index, column.key)
         for table, column in RESETTABLE
         for index, row in data.rows.get(table.key, {}).items()
-        if index and index[0] == unit_index and column.key in row
+        if index
+        and index[0] == unit_index
+        and column.key in row
+        and not data.is_redundant(table.key, index)
     ]
 
 

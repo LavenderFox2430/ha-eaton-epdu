@@ -32,15 +32,19 @@ def device_id(entry: ConfigEntry, unit_index: int) -> str:
 
 
 def entity_name(label: str, column_name: str) -> str:
-    """Join a row label and a column name without repeating words.
+    """Join a row label and a column name without repeating a word.
 
-    "Outlet A1" + "Current" -> "Outlet A1 Current", but
-    "Contact 1" + "Contact" -> "Contact 1".
+    The column name is dropped only when the label already *starts* with it,
+    which is the case the rule exists for: a contact the PDU calls
+    "Contact 1" should not become "Contact 1 Contact". A label that merely
+    contains the word keeps both parts -- an input named "Office Power" still
+    needs "Office Power Power" for its wattage, or it would be
+    indistinguishable from its apparent power.
     """
     label = (label or "").strip()
     if not label:
         return column_name
-    if column_name.lower() in label.lower():
+    if label.lower().startswith(column_name.lower()):
         return label
     return f"{label} {column_name}"
 

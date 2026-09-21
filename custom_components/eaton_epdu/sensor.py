@@ -39,6 +39,8 @@ async def async_setup_entry(
 
         for table in TABLES:
             for index in data.rows.get(table.key, {}):
+                if data.is_redundant(table.key, index):
+                    continue
                 for column in table.columns:
                     if column.info_only or column.platform != "sensor":
                         continue
